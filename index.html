@@ -1,1 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>魚鱻如意好物網｜線上下單</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root{--ink:#153d38;--muted:#667a76;--primary:#087b6d;--primary-dark:#056458;--mint:#e7f6f2;--line:#dce7e4;--surface:#fff;--page:#f5f8f7;--accent:#fff2b8;--danger:#a53a3a;--shadow:0 14px 38px rgba(21,61,56,.09)}
+    *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.5}button,input,select{font:inherit}[hidden]{display:none!important}
+    .app{width:min(680px,calc(100% - 24px));margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 0 max(34px,env(safe-area-inset-bottom))}
+    .hero{padding:24px;border-radius:22px;background:linear-gradient(135deg,#0d7569,#154e49);color:#fff;box-shadow:var(--shadow)}.hero h1{margin:0;font-size:26px}.hero p{margin:7px 0 0;color:rgba(255,255,255,.82)}
+    .profile{display:flex;align-items:center;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)}.avatar{width:44px;height:44px;border:2px solid rgba(255,255,255,.65);border-radius:50%;background:rgba(255,255,255,.18);object-fit:cover}.profile small{display:block;color:rgba(255,255,255,.72)}.profile strong{display:block}
+    .card{margin-top:16px;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}.card-head{padding:18px 20px;background:var(--mint)}.card-head h2{margin:0;font-size:20px}.card-head p{margin:4px 0 0;color:var(--muted);font-size:14px}.card-body{padding:20px}
+    .field{margin-bottom:16px}.field label{display:block;margin-bottom:7px;font-size:14px;font-weight:800}.control{width:100%;min-height:50px;padding:11px 13px;border:1px solid #c8d8d4;border-radius:11px;background:var(--accent);color:var(--ink);outline:0}.control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(8,123,109,.13)}
+    .grid{display:grid;grid-template-columns:1fr 116px;gap:12px}.price{display:flex;justify-content:space-between;gap:16px;margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:#f7faf9}.price span{color:var(--muted);font-size:13px}.price strong{display:block;margin-top:2px;font-size:21px}
+    .button{width:100%;min-height:50px;border:0;border-radius:11px;background:var(--primary);color:#fff;cursor:pointer;font-weight:900}.button:hover{background:var(--primary-dark)}.button:disabled{cursor:wait;opacity:.58}.button.secondary{border:1px solid var(--primary);background:#fff;color:var(--primary)}
+    .summary{margin-bottom:14px;padding:14px 16px;border-radius:12px;background:var(--mint)}.summary span{color:var(--muted);font-size:13px}.summary strong{display:block;font-size:24px}.orders{display:grid;gap:10px}.order{padding:14px 15px;border:1px solid var(--line);border-radius:12px}.order-top{display:flex;justify-content:space-between;gap:12px}.order h3{margin:0;font-size:16px}.order strong{white-space:nowrap}.order-meta{margin-top:7px;color:var(--muted);font-size:14px}
+    .empty{padding:24px 8px;color:var(--muted);text-align:center}.notice{margin-bottom:14px;padding:12px 14px;border-radius:10px;background:#fff7da;color:#6a5410;font-size:14px}.loading-page{padding:76px 20px;color:var(--muted);text-align:center}.spinner{width:34px;height:34px;margin:0 auto 12px;border:3px solid #cde4df;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+    .toast{position:fixed;right:16px;bottom:18px;left:16px;z-index:10;max-width:640px;margin:auto;padding:13px 16px;border-radius:11px;background:#173c37;color:#fff;opacity:0;transform:translateY(10px);pointer-events:none;transition:.18s ease}.toast.visible{opacity:1;transform:translateY(0)}.toast.error{background:var(--danger)}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:480px){.hero{padding:21px 18px}.card-body{padding:18px}.grid{grid-template-columns:1fr 94px}}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero"><h1>魚鱻如意好物網</h1><p>選擇商品與數量，即可完成團購下單</p><div class="profile" id="profile" hidden><img class="avatar" id="avatar" alt=""><div><small>LINE 登入</small><strong id="lineName">會員</strong></div></div></section>
+    <div class="loading-page" id="loadingPage"><div class="spinner"></div><div>正在確認 LINE 登入...</div></div>
+    <section class="card" id="bindCard" hidden><div class="card-head"><h2>第一次使用</h2><p>請選擇你在團購社群使用的會員姓名</p></div><div class="card-body"><div class="notice">會員姓名綁定後，這個 LINE 帳號只會看到自己的訂單。</div><div class="field"><label for="customerSelect">會員姓名</label><select class="control" id="customerSelect"><option value="">請選擇姓名</option></select></div><button class="button" id="bindButton" type="button">確認綁定</button></div></section>
+    <div id="customerArea" hidden>
+      <section class="card"><div class="card-head"><h2>新增訂單</h2><p id="memberLabel">會員：</p></div><div class="card-body"><form id="orderForm"><div class="grid"><div class="field"><label for="product">團購商品</label><select class="control" id="product" required><option value="">請選擇商品</option></select></div><div class="field"><label for="quantity">數量</label><input class="control" id="quantity" type="number" min="1" step="1" value="1" required></div></div><div class="price"><div><span>單價</span><strong id="unitPrice">$0</strong></div><div><span>本筆總額</span><strong id="totalPrice">$0</strong></div></div><button class="button" id="submitButton" type="submit">送出訂單</button></form></div></section>
+      <section class="card"><div class="card-head"><h2>我的未出貨商品</h2><p>只顯示目前尚未出貨的訂單</p></div><div class="card-body"><div class="summary"><span>未出貨累積金額</span><strong id="unshippedAmount">$0</strong></div><div class="orders" id="orders"></div><button class="button secondary" id="refreshButton" type="button">重新整理</button></div></section>
+    </div>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+    const LIFF_ID='2009967493-33dStN3H';
+    const API_URL='https://script.google.com/macros/s/AKfycbxOfAbLmx0xYwypwQ_oG32azRagr0ysF8RDyEJPtVUrk_PB11DKYrPdDpJ_l3dYGiTf4A/exec';
+    const currency=new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',maximumFractionDigits:0});
+    const state={idToken:'',products:[],customer:null};
+    const el=Object.fromEntries(['loadingPage','profile','avatar','lineName','bindCard','customerSelect','bindButton','customerArea','memberLabel','orderForm','product','quantity','unitPrice','totalPrice','submitButton','unshippedAmount','orders','refreshButton','toast'].map(id=>[id,document.getElementById(id)]));
+    async function serverCall(functionName,...args){
+      const response=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({functionName,args}),redirect:'follow'});
+      if(!response.ok)throw new Error(`資料服務連線失敗 (${response.status})`);
+      const payload=await response.json();
+      if(!payload.success)throw new Error(payload.error||'資料處理失敗');
+      return payload.result;
+    }
+    function withTimeout(promise,ms,message){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(message)),ms))])}
+    function setLoadingMessage(message){const label=el.loadingPage.querySelector('div:last-child');if(label)label.textContent=message}
+    function toast(message,error=false){el.toast.textContent=message;el.toast.classList.toggle('error',error);el.toast.classList.add('visible');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.toast.classList.remove('visible'),3000)}
+    function setLoading(button,active,text){if(active){button.dataset.label=button.textContent;button.textContent=text;button.disabled=true}else{button.textContent=button.dataset.label||button.textContent;button.disabled=false}}
+    function renderPortal(data){state.products=data.products||[];state.customer=data.customer||null;el.lineName.textContent=data.profile?.displayName||'LINE 會員';if(data.profile?.pictureUrl)el.avatar.src=data.profile.pictureUrl;else el.avatar.removeAttribute('src');el.profile.hidden=false;renderProducts();if(!state.customer){el.customerSelect.replaceChildren(new Option('請選擇姓名',''));(data.customers||[]).forEach(c=>el.customerSelect.append(new Option(c.name,c.name)));el.bindCard.hidden=false;el.customerArea.hidden=true}else{el.bindCard.hidden=true;el.customerArea.hidden=false;el.memberLabel.textContent=`會員：${state.customer.name}`;renderOrders(data.orders)}}
+    function renderProducts(){const current=el.product.value;el.product.replaceChildren(new Option('請選擇商品',''));state.products.forEach(p=>el.product.append(new Option(`${p.name}｜${currency.format(p.price)}／${p.unit||'件'}`,p.name)));if(state.products.some(p=>p.name===current))el.product.value=current;updatePrice()}
+    function updatePrice(){const p=state.products.find(item=>item.name===el.product.value);const q=Math.max(Number(el.quantity.value)||0,0);el.unitPrice.textContent=currency.format(p?.price||0);el.totalPrice.textContent=currency.format((p?.price||0)*q)}
+    function renderOrders(result){const orders=result?.orders||[];el.unshippedAmount.textContent=currency.format(result?.unshippedAmount||0);if(!orders.length){el.orders.innerHTML='<div class="empty">目前沒有未出貨商品</div>';return}el.orders.replaceChildren(...orders.map(order=>{const item=document.createElement('article');item.className='order';item.innerHTML=`<div class="order-top"><h3>${escapeHtml(order.productName)}</h3><strong>${currency.format(order.amount||0)}</strong></div><div class="order-meta">${escapeHtml(order.date)}・數量 ${Number(order.quantity).toLocaleString('zh-TW')}</div>`;return item}))}
+    function escapeHtml(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
+    async function loadPortal(){setLoadingMessage('正在讀取會員與商品資料...');const data=await withTimeout(serverCall('getCustomerPortal',state.idToken),20000,'讀取資料逾時，請稍後再試');renderPortal(data);el.loadingPage.hidden=true}
+    async function init(){try{setLoadingMessage('正在確認 LINE 登入...');await withTimeout(liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true}),12000,'LINE 登入連線逾時');if(!liff.isLoggedIn()){liff.login({redirectUri:location.href});return}state.idToken=liff.getIDToken();if(!state.idToken)throw new Error('無法取得 LINE 登入資料');await loadPortal()}catch(error){el.loadingPage.innerHTML=`<div class="empty">${escapeHtml(error.message||'載入失敗')}</div>`;toast(error.message||'載入失敗',true)}}
+    el.product.addEventListener('change',updatePrice);el.quantity.addEventListener('input',updatePrice);
+    el.bindButton.addEventListener('click',async()=>{const name=el.customerSelect.value;if(!name)return toast('請先選擇會員姓名',true);setLoading(el.bindButton,true,'綁定中...');try{renderPortal(await serverCall('bindLineCustomer',state.idToken,name));toast('會員姓名已綁定')}catch(error){toast(error.message,true)}finally{setLoading(el.bindButton,false)}});
+    el.orderForm.addEventListener('submit',async event=>{event.preventDefault();setLoading(el.submitButton,true,'訂單送出中...');try{const result=await serverCall('addLineOrder',state.idToken,{productName:el.product.value,quantity:Number(el.quantity.value)});renderOrders(result.orders);el.quantity.value='1';updatePrice();toast(result.message)}catch(error){toast(error.message,true)}finally{setLoading(el.submitButton,false)}});
+    el.refreshButton.addEventListener('click',async()=>{setLoading(el.refreshButton,true,'更新中...');try{const data=await serverCall('getCustomerPortal',state.idToken);renderOrders(data.orders);toast('訂單已更新')}catch(error){toast(error.message,true)}finally{setLoading(el.refreshButton,false)}});
+    init();
+  </script>
+</body>
+</html>
 index.html
